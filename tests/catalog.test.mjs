@@ -1,0 +1,3 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {getProducts} from '../app/lib/shopify-catalog.server.mjs';
+test('paginates and exposes truncated catalog correctly',async()=>{let page=0;const admin={graphql:async()=>({ok:true,json:async()=>({data:{products:{nodes:[{id:String(++page)}],pageInfo:{hasNextPage:page<3,endCursor:String(page)}}}})})};const r=await getProducts(admin,2);assert.equal(r.products.length,2);assert.equal(r.limited,true);});
+test('surfaces GraphQL errors',async()=>{const admin={graphql:async()=>({ok:true,json:async()=>({errors:[{message:'Forbidden'}]})})};await assert.rejects(getProducts(admin),/GraphQL errors/);});
