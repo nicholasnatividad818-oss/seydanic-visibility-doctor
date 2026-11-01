@@ -1,0 +1,16 @@
+{
+  "name": "SEYDANIC Visibility Doctor",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:1-22-bookworm",
+  "features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+  "postCreateCommand": "bash -lc 'if [ -f package.json ]; then npm ci && npx prisma generate; else echo \"Overlay repository: add the official Shopify app scaffold before npm install.\"; fi'",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode"
+      ]
+    }
+  }
+}
