@@ -1,0 +1,12 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {auditProducts} from '../app/lib/audit.mjs';
+import {getProducts, MAX_SYNC_PRODUCTS} from '../app/lib/shopify-catalog.server.mjs';
+const p=(id,other={})=>({id,title:'Product '+id,description:'Long '.repeat(40),status:'ACTIVE',seo:{title:'SEO',description:'Description'},onlineStoreUrl:'https://example.test',media:{nodes:[{id:'m'}]},...other});
+test('draft should not create duplicate active-product alert',()=>{const r=auditProducts([p('1',{title:'Shirt'}),p('2',{title:' shirt ',status:'DRAFT'})]);assert.equal(r.issues.filter(i=>i.code==='DUPLICATE_TITLE').length,0);});
+test('nullable fields are handled',()=>{const r=auditProducts([p('1',{title:null,description:null,media:null,seo:null,onlineStoreUrl:null})]);assert.equal(r.counts.high,3);});
+test('invalid scanner inputs fail closed',()=>assert.throws(()=>auditProducts(null),TypeError));
+test('oversized scan requests are rejected',async()=>{await assert.rejects(getProducts({graphql:async()=>{}},MAX_SYNC_PRODUCTS+1),RangeError);await assert.rejects(getProducts({graphql:async()=>{}},1.5),RangeError);});
+test('empty continued pagination page fails',async()=>{const admin={graphql:async()=>({ok:true,json:async()=>({data:{products:{nodes:[],pageInfo:{hasNextPage:true,endCursor:'x'}}}})})};await assert.rejects(getProducts(admin),/pagination cursor/);});
+test('repeated cursors fail',async()=>{const admin={graphql:async()=>({ok:true,json:async()=>({data:{products:{nodes:[p('1')],pageInfo:{hasNextPage:true,endCursor:'same'}}}})})};await assert.rejects(getProducts(admin),/pagination cursor/);});
+test('malformed product page fails',async()=>{const admin={graphql:async()=>({ok:true,json:async()=>({data:{products:{nodes:{},pageInfo:{hasNextPage:false}}}})})};await assert.rejects(getProducts(admin),/Unexpected Shopify/);});
