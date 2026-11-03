@@ -30,3 +30,43 @@ jobs:
         run: npm run typecheck
       - name: Production build
         run: npm run build
+      - name: Apply development database migrations
+        run: npx prisma migrate deploy
+      - name: Verify session persistence in test database
+        run: |
+          node --input-type=module <<'NODE'
+          import { PrismaClient } from '@prisma/client';
+          import assert from 'node:assert/strict';
+          const db = new PrismaClient();
+          const id = 'ci-session-persistence-test';
+          try {
+            await db.session.create({data:{id,shop:'test-shop.myshopify.com',state:'ci',isOnline:false,accessToken:'ci-only-not-real'}});
+            const session = await db.session.findUnique({where:{id}});
+            assert.equal(session?.shop,'test-shop.myshopify.com');
+            await db.session.delete({where:{id}});
+            console.log('Session write/read/delete passed');
+          } finally { await db.$disconnect(); }
+          NODE
+      - name: Smoke-test production HTTP server without merchant access
+        run: |
+          NODE_ENV=production PORT=3000 npm run start > /tmp/visibility-doctor-server.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          ready=0
+          for i in $(seq 1 25); do
+            if curl -s --max-time 2 -o /tmp/visibility-doctor-response -w '%{http_code}' http://127.0.0.1:3000/ > /tmp/visibility-doctor-code; then
+              ready=1
+              break
+            fi
+            sleep 1
+          done
+          if [ "$ready" != "1" ]; then
+            echo 'HTTP server did not start'; tail -80 /tmp/visibility-doctor-server.log; exit 1
+          fi
+          code=$(cat /tmp/visibility-doctor-code)
+          echo "Unauthenticated root HTTP status: $code"
+          if [ "$code" = "500" ] || [ "$code" = "000" ]; then
+            tail -80 /tmp/visibility-doctor-server.log
+            exit 1
+          fi
+          echo 'Production HTTP server responded without an internal server error'
