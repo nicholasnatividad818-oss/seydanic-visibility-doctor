@@ -19,3 +19,6 @@ shopify.app.toml.backup
 dist/
 build/
 .DS_Store
+
+# React Router generated route types
+.react-router/
