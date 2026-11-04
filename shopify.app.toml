@@ -1,0 +1,19 @@
+name = "SEYDANIC Visibility Doctor"
+client_id = ""
+application_url = "https://example.invalid"
+embedded = true
+
+[access_scopes]
+scopes = "read_products"
+
+[auth]
+redirect_urls = ["https://example.invalid/auth/callback"]
+
+[webhooks]
+api_version = "2026-10"
+[[webhooks.subscriptions]]
+topics = ["app/uninstalled"]
+uri = "/webhooks/app/uninstalled"
+[[webhooks.subscriptions]]
+topics = ["app/scopes_update"]
+uri = "/webhooks/app/scopes_update"

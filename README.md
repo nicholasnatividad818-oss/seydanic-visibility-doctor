@@ -1,31 +1,17 @@
 # SEYDANIC Visibility Doctor
 
-Read-only Shopify catalog diagnostic MVP. This repository currently contains the scanner overlay, unit tests, and a Codespaces configuration. **It is not a complete Shopify React Router application yet.** The full scaffold is still on the user's Mac.
+Shopify embedded React Router app scaffold with a read-only product metadata auditor.
 
-## Set up Codespaces
-Open the repository in Codespaces. The devcontainer provides Node.js 22 and a Linux development environment. Until the full scaffold is uploaded, there is no `package.json`, so do not run `npm install` yet.
+## Develop in Codespaces
 
-Transfer the official Shopify React Router scaffold from the local project, including its `package.json`, lockfile, `app/shopify.server.ts`, authentication, Prisma session storage, Shopify TOML configuration and Vite setup. Merge the scanner overlay here. **Do not transfer secrets, `.env`, `.shopify/`, `node_modules/`, or private merchant data.**
+Use Node 22.12 or newer. Run `npm install`, `npm run setup`, and `npm test`.
+Run `shopify app config link` and select the existing SEYDANIC Visibility Doctor app and the development test shop, not the live Instinct Ink Identity store. Verify `read_products` only. The example client ID and URL in shopify.app.toml must be replaced by Shopify CLI linking.
+Run `npm run dev` to launch. Do not commit .env, tokens, merchant data, or databases.
 
-Once the complete scaffold is present:
+The auditor scans up to 500 products and displays 150 prioritized findings. The metadata audit does NOT verify Google indexing, payments, checkout, inventory, or performance.
 
-```bash
-npm ci
-npx prisma generate
-node --test tests/*.test.mjs
-npm install -g @shopify/cli@latest
-shopify app dev
-```
+## Commercial release blockers
 
-Link the existing **SEYDANIC Visibility Doctor** app, choose the **development store** (never the live Instinct Ink Identity store), and use `read_products` only.
+The app scaffold has NOT been installed, started, or end-to-end verified yet. Produce a dependency lockfile, test Shopify authentication and webhooks, configure durable production database/hosting, implement privacy compliance webhooks, multi-tenant tests, billing and subscription enforcement, and complete Shopify App Store review before sales.
 
-## Scanner
-- `app/lib/audit.mjs` — read-only metadata quality checks
-- `app/lib/shopify-catalog.server.mjs` — paginated GraphQL product reads
-- `app/routes/app._index.tsx` — Shopify embedded dashboard
-- `tests/*.test.mjs` — automated scanner checks
-
-Current caps: 500 scanned products per request and 150 displayed findings. No proof of Google indexing, checkout health, actual stock, or storefront performance.
-
-## Security
-No write scopes; never commit access tokens, session secrets or credentials. Before commercial release: validate authentication, multi-tenant isolation, retention/privacy webhooks, billing, hosting and Shopify App Store requirements.
+This branch does not modify your live Shopify store or checkout.
