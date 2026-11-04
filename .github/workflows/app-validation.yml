@@ -1,7 +1,7 @@
 name: Shopify app scaffold validation
 on:
   push:
-    branches: ['feat/**']
+    branches: [main, 'feat/**', 'fix/**']
   pull_request:
 jobs:
   validate:
@@ -21,7 +21,7 @@ jobs:
         with:
           node-version: '22'
       - name: Install dependencies
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
       - name: Generate Prisma client
         run: npx prisma generate
       - name: Scanner tests
@@ -31,7 +31,7 @@ jobs:
       - name: Production build
         run: npm run build
       - name: Apply development database migrations
-        run: npx prisma migrate deploy
+        run: npm run setup
       - name: Verify session persistence in test database
         run: |
           node --input-type=module <<'NODE'
@@ -54,7 +54,7 @@ jobs:
           trap 'kill "$server_pid" 2>/dev/null || true' EXIT
           ready=0
           for i in $(seq 1 25); do
-            if curl -s --max-time 2 -o /tmp/visibility-doctor-response -w '%{http_code}' http://127.0.0.1:3000/ > /tmp/visibility-doctor-code; then
+            if curl -s --max-time 2 -o /tmp/visibility-doctor-response -w '%{http_code}' http://127.0.0.1:3000/auth/login > /tmp/visibility-doctor-code; then
               ready=1
               break
             fi
@@ -64,9 +64,10 @@ jobs:
             echo 'HTTP server did not start'; tail -80 /tmp/visibility-doctor-server.log; exit 1
           fi
           code=$(cat /tmp/visibility-doctor-code)
-          echo "Unauthenticated root HTTP status: $code"
-          if [ "$code" = "500" ] || [ "$code" = "000" ]; then
+          echo "Login HTTP status: $code"
+          if [ "$code" != "200" ]; then
             tail -80 /tmp/visibility-doctor-server.log
             exit 1
           fi
-          echo 'Production HTTP server responded without an internal server error'
+          grep -q 'Shop domain' /tmp/visibility-doctor-response
+          echo 'Production login route returned the shop-domain form'

@@ -1,11 +1,12 @@
 # SEYDANIC Visibility Doctor — Shopify SaaS Launch Gate
 
-Status: **NOT SALES READY**. This repository is currently a scanner overlay, not a bootable Shopify app. Do not publish, charge merchants, or claim automated monitoring until gates pass.
+Status: **NOT SALES READY**. The Shopify app scaffold is merged into main and runs locally with test fixtures; Shopify integration and commercial readiness remain unverified. Do not publish, charge merchants, or claim automated monitoring until gates pass.
 
 ## 1. Restore runnable Shopify app (P0)
-- [ ] Import the **official Shopify React Router scaffold** from the user's local Mac project into this repository, preserving these existing scanner modules and tests.
-- [ ] Include package.json, committed lockfile, React Router/Vite config, app/shopify.server.ts, Prisma schema and migration files, authenticated session storage, appropriate Shopify CLI configuration. Do not commit .env, access tokens, node_modules, .shopify, or production merchant data.
-- [ ] Run npm ci, Prisma generate/migrate in a development database, unit tests, typecheck and production build. Set up CI; block release on failures.
+- [x] Merge the React Router app scaffold and preserve the scanner modules/tests (PR #2 is in main history).
+- [x] Include package.json, committed lockfile, React Router/Vite config, app/shopify.server.ts, Prisma schema and migration files, authenticated session storage, appropriate Shopify CLI configuration. Do not commit .env, access tokens, node_modules, .shopify, or production merchant data.
+- [x] Validate local install, Prisma generate/migrate, scanner tests, typecheck, build, session persistence and login HTTP response. CI definitions cover these checks.
+- [ ] Verify hosted CI results and configure required branch checks before release.
 - [ ] Link Shopify Partner/Dev Dashboard app to this repository, and connect **only a Shopify development store**. Use `read_products` for the current scanner; never request write scopes without a new justified feature and consent.
 
 ## 2. Production app security and reliability (P0)
@@ -39,8 +40,10 @@ Status: **NOT SALES READY**. This repository is currently a scanner overlay, not
 - [ ] Smoke test install/uninstall/reinstall, OAuth, app loading, permissions, scan of zero/one/many products, HMAC privacy webhooks, billing, support and cross-tenant isolation.
 - [ ] Release progressively; verify logs and refund/support response process.
 
-## Current repo facts (verified 2026-11-02)
-- README states full scaffold remains on Mac; package.json and shopify.app.toml are absent from GitHub main.
+## Current repo facts (rechecked 2026-11-04)
+- Remote main is e3bf933de863fdb5ec4b6de23047c1a4b635e696 and contains the PR #2 scaffold, package.json, and shopify.app.toml.
+- Shopify configuration has an empty client ID and placeholder application URL. No Shopify app credentials were configured during this check.
+- Local setup and validation results are recorded in LOCAL_VALIDATION.md.
 - app/lib/audit.mjs implements pure product metadata checks.
 - app/lib/shopify-catalog.server.mjs pages product reads with a 500-item default ceiling.
 - app/routes/app._index.tsx is an embedded read-only dashboard, displaying at most 150 findings.
